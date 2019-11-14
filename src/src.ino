@@ -1,29 +1,7 @@
 /*
-  Codename Happiness
-  Language: Arduino
-
-  This program reads various sensors
-  -> Humidity
-  -> Temperature
-  -> Dust
-  -> Volume
-  -> Light
-  
-  And sends an HTTP request every seconds with current values.
-
-  The circuit:
-  -> TODO
-
-  Created: 2019-11-12
-  by Marko Zanoski <zanoski.marko@gmail.com>
-  assisted by 
-  
-  This example code is in the public domain on Github.
-*/
-
-/*
  * Codename Happiness
  * Language: Arduino
+ * 
  * This program reads various sensors
  * <ul>
  * <li>Humidity</li>
