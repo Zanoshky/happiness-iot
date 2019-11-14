@@ -31,11 +31,11 @@
 /*
  * List of constants
  */
-#define HUMIDITY_PIN 1
-#define TEMPERATURE_PIN 2
-#define DUST_PIN 3
-#define VOLUME_PIN 4
-#define LIGHT_PIN 5
+#define PIN_HUMIDITY 1
+#define PIN_TEMPERATURE 2
+#define PIN_DUST 3
+#define PIN_VOLUME 4
+#define PIN_LIGHT 5
 
 
 /*
@@ -88,4 +88,5 @@ void loop()
     Serial.println("");
     Serial.print("Light: ");
     Serial.print(lightValue);
+    Serial.println("");
 }
