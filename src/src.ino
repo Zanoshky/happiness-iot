@@ -21,12 +21,93 @@
   This example code is in the public domain on Github.
 */
 
-void setup() {
-  // put your setup code here, to run once:
+/*
+ * Codename Happiness
+ * Language: Arduino
+ * This program reads various sensors
+ * <ul>
+ * <li>Humidity</li>
+ * <li>Temperature</li>
+ * <li>Dust</li>
+ * <li>Volume</li>
+ * <li>Light</li>
+ * </ul> 
+ * 
+ * And sends an HTTP request every seconds with current values.
+ * 
+ * The circuit:
+ * TODO
+ * 
+ * Created: 2019-11-12
+ * by Marko Zanoski <zanoski.marko@gmail.com>
+ * assisted by 
+ * 
+ * This example code is in the public domain on Github.
+ */
 
+/*
+ * List of libraries
+ * TODO
+ */
+
+/*
+ * List of constants
+ */
+#define HUMIDITY_PIN 1
+#define TEMPERATURE_PIN 2
+#define DUST_PIN 3
+#define VOLUME_PIN 4
+#define LIGHT_PIN 5
+
+
+/*
+ * Code initialization
+ * TODO
+ */
+
+
+/*
+ * Code variables
+ */
+float humidityValue;
+float temperatureValue;
+float dustValue;
+float volumeValue;
+float lightValue;
+
+/*
+ * Initial code block that executes on startup / booting
+ */
+void setup()
+{
+  Serial.begin(9600);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
+/**
+ * Compilaiton result
+ * Sketch uses 3620 bytes (11%) of program storage space. Maximum is 32256 bytes.
+ * Global variables use 252 bytes (12%) of dynamic memory, leaving 1796 bytes for local variables. Maximum is 2048 bytes.
+ */
 
+/*
+ * Main code logic that loop indefinitely
+ */
+void loop()
+{
+    delay(1000);
+    
+    Serial.print("Humidity: ");
+    Serial.print(humidityValue);
+    Serial.println("");
+    Serial.print("Temperature: ");
+    Serial.print(temperatureValue);
+    Serial.println("");
+    Serial.print("Dust: ");
+    Serial.print(dustValue);
+    Serial.println("");
+    Serial.print("Volumeity: ");
+    Serial.print(volumeValue);
+    Serial.println("");
+    Serial.print("Light: ");
+    Serial.print(lightValue);
 }
