@@ -7,7 +7,7 @@
  * <li>Humidity</li>
  * <li>Temperature</li>
  * <li>Dust</li>
- * <li>Volume</li>
+ * <li>Volume - SoundSensor LM386</li>
  * <li>Light</li>
  * </ul> 
  * 
@@ -31,11 +31,11 @@
 /*
  * List of constants
  */
-#define PIN_HUMIDITY 1
-#define PIN_TEMPERATURE 2
-#define PIN_DUST 3
-#define PIN_VOLUME 4
-#define PIN_LIGHT 5
+#define PIN_D_HUMIDITY 1
+#define PIN_D_TEMPERATURE 2
+#define PIN_D_DUST 3
+#define PIN_A_VOLUME 0
+#define PIN_A_LIGHT 5
 
 
 /*
@@ -50,7 +50,7 @@
 float humidityValue;
 float temperatureValue;
 float dustValue;
-float volumeValue;
+long volumeValue;
 float lightValue;
 
 /*
@@ -71,8 +71,17 @@ void setup()
  * Main code logic that loop indefinitely
  */
 void loop()
-{
+{  
     delay(1000);
+
+    // Sample sound level
+    volumeValue = 0;
+    for(int i=0; i<32; i++)
+    {
+        volumeValue += analogRead(PIN_A_VOLUME);
+    }
+
+    volumeValue >>= 5;
     
     Serial.print("Humidity: ");
     Serial.print(humidityValue);
