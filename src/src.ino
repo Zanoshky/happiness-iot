@@ -85,6 +85,10 @@ void setup()
  * With Temperature and Humidity - DHT22
  * Sketch uses 7424 bytes (23%) of program storage space. Maximum is 32256 bytes.
  * Global variables use 541 bytes (26%) of dynamic memory, leaving 1507 bytes for local variables. Maximum is 2048 bytes.
+ * 
+ * Code optimization from int to byte
+ * Sketch uses 7416 bytes (22%) of program storage space. Maximum is 32256 bytes.
+ * Global variables use 537 bytes (26%) of dynamic memory, leaving 1511 bytes for local variables. Maximum is 2048 bytes.
  */
 
 /*
@@ -95,28 +99,26 @@ void loop()
     delay(1000);
 
     // Sample sound / volume --------------------------------
+
     soundMeter = 0;
-    for(int i=0; i<32; i++)
+    for(byte i=0; i<32; i++)
     {
         soundMeter += analogRead(PIN_A_VOLUME);
     }
 
     soundMeter >>= 5;
 
-    // ------------------------------------------------------
+    // Sample light -----------------------------------------
 
-    // Sample light
     uint16_t lightMeterReading = lightMeter.readLightLevel();
 
-    // ------------------------------------------------------
-    
-    // Sample Temperature and Humidity ----------------------
+    // Sample temperature and humidity ----------------------
+
     humidityValue = dht.readHumidity();
     temperatureValue = dht.readTemperature();
 
-    // ------------------------------------------------------
-    
-    // Debug print
+    // Debug print ------------------------------------------
+ 
     Serial.print("Humidity: ");
     Serial.print(humidityValue);
     Serial.println("");
@@ -126,7 +128,7 @@ void loop()
     Serial.print("Dust: ");
     Serial.print(dustValue);
     Serial.println("");
-    Serial.print("Volumeity: ");
+    Serial.print("Volume: ");
     Serial.print(soundMeter);
     Serial.println("");
     Serial.print("Light: ");
