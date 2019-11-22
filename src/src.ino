@@ -48,10 +48,12 @@
  */
 float humidityValue;
 float temperatureValue;
-float dustValue;
-long soundMeter;
-BH1750 lightMeter;
 DHT dht(PIN_D_TEMP_N_HUM, DHTTYPE);
+
+int smokeAnalogSensor = A0;
+int sensorThres = 400;
+
+
 
 /*
  * Initial code block that executes on startup / booting
@@ -61,8 +63,11 @@ void setup()
   // Define USB
   Serial.begin(9600);
 
-  lightMeter.begin();
+  pinMode(smokeAnalogSensor, INPUT);
+
+
   dht.begin();
+ 
 
   Serial.print("Starting Codename Happiness for ");
   Serial.print(TEAM_NAME);
@@ -98,24 +103,18 @@ void loop()
 {  
     delay(1000);
 
-    // Sample sound / volume --------------------------------
+    //Smoke detection 
+    int analogSensor = analogRead(smokeAnalogSensor);
+    Serial.print("MQ2: ");
+    Serial.println(analogSensor);
 
-    soundMeter = 0;
-    for(byte i=0; i<32; i++)
-    {
-        soundMeter += analogRead(PIN_A_VOLUME);
-    }
-
-    soundMeter >>= 5;
-
-    // Sample light -----------------------------------------
-
-    uint16_t lightMeterReading = lightMeter.readLightLevel();
 
     // Sample temperature and humidity ----------------------
 
     humidityValue = dht.readHumidity();
     temperatureValue = dht.readTemperature();
+
+    
 
     // Debug print ------------------------------------------
  
@@ -125,13 +124,6 @@ void loop()
     Serial.print("Temperature: ");
     Serial.print(temperatureValue);
     Serial.println("");
-    Serial.print("Dust: ");
-    Serial.print(dustValue);
-    Serial.println("");
-    Serial.print("Volume: ");
-    Serial.print(soundMeter);
-    Serial.println("");
-    Serial.print("Light: ");
-    Serial.print(lightMeterReading);
-    Serial.println("");
+
+    
 }
