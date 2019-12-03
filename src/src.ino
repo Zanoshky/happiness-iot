@@ -29,19 +29,33 @@
 #include <Wire.h>
 #include <BH1750.h>
 #include <DHT.h>
+#include <SPI.h>
+#include <Adafruit_Sensor.h>
+
+
 
 /*
  * List of constants
  */
-#define PIN_D_TEMP_N_HUM 2
-#define PIN_D_DUST 3
-#define PIN_A_VOLUME 0
-#define PIN_A_LIGHT 5
+ #define PIN_D_TEMP_N_HUM 2
+//#define PIN_D_DUST 3
+//#define PIN_A_VOLUME 0
+//#define PIN_A_LIGHT 5
+
+
+//BM280
+#define BME_SCK 13 // Serial Clock -------> SCL
+#define BME_MISO 12 // Serial Data Out ---> SDA/SDI
+#define BME_MOSI 11 // Serial Data In  ---> SDO
+#define BME_CS 10 // Chip Selecta      ---> CSB
 
 #define TEAM_NAME "Heisenberg"
 
 #define DHTPIN 7
 #define DHTTYPE DHT22
+
+const int pinAdc = A2;
+
 
 /*
  * Code variables
@@ -53,6 +67,8 @@ DHT dht(PIN_D_TEMP_N_HUM, DHTTYPE);
 int smokeAnalogSensor = A0;
 int sensorThres = 400;
 
+//Adafruit_BME280 bme(BME_CS,BME_MOSI,BME_MISO,BME_SCK);
+
 
 
 /*
@@ -63,7 +79,6 @@ void setup()
   // Define USB
   Serial.begin(9600);
 
-  pinMode(smokeAnalogSensor, INPUT);
 
 
   dht.begin();
@@ -72,6 +87,14 @@ void setup()
   Serial.print("Starting Codename Happiness for ");
   Serial.print(TEAM_NAME);
   Serial.print("...");
+
+
+  
+
+//  Serial.println("Trying to wire...");
+//  Wire.begin();
+//  lightMeter.begin();
+//  Serial.println("BH1750 Test");
 }
 
 /**
@@ -117,7 +140,7 @@ void loop()
     
 
     // Debug print ------------------------------------------
- 
+    //DHT22 values
     Serial.print("Humidity: ");
     Serial.print(humidityValue);
     Serial.println("");
@@ -125,5 +148,34 @@ void loop()
     Serial.print(temperatureValue);
     Serial.println("");
 
-    
+    long sum = 0;
+    for(int i=0; i<32; i++)
+    {
+        sum += analogRead(pinAdc);
+    }
+
+    sum >>= 5;
+
+    Serial.println(sum);
+    delay(10);
+
+    //BME280
+//   
+//    Serial.print("DigitalTemperature = ");
+//    Serial.print(bme.readTemperature());
+//    Serial.println("*C");
+//
+//    Serial.print("DigitalPressure = ");
+//    Serial.print(bme.readPressure() / 100.0F);
+//    Serial.println("hPa");
+//  
+//    Serial.print("DigitalHumidity = ");
+//    Serial.print(bme.readHumidity());
+//    Serial.println("%");
+
+    //BH1750
+//    float lux = lightMeter.readLightLevel(true);
+//    Serial.print("Light: ");
+//    Serial.print(lux);
+//    Serial.println(" lx");
 }
