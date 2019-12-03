@@ -109,8 +109,8 @@ void loop()
     {
         soundMeter += analogRead(PIN_A_VOLUME);
     }
-
-    soundMeter = 20 * log10(analogRead(PIN_A_VOLUME));
+    soundMeter >>= 5;
+    soundMeter = 20 * log10(analogRead(soundMeter));
 
     // Sample temperature and humidity ----------------------
 
