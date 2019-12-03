@@ -6,9 +6,11 @@
  * <ul>
  * <li>Humidity - DHT22</li>
  * <li>Temperature - DHT22</li>
- * <li>Dust</li>
+ * <li>Dust - TODO</li>
  * <li>Volume - SoundSensor LM386</li>
  * <li>Light - BH1750</li>
+ * <li>Gas - MQ2</li>
+ * <li>Pressure - TODO</li>
  * </ul> 
  * 
  * And sends an HTTP request every seconds with current values.
@@ -27,20 +29,24 @@
  * List of libraries
  */
 #include <Wire.h>
-#include <BH1750.h>
 #include <DHT.h>
+#include <math.h>
 
 /*
- * List of constants
+ * List of constants for digital pins
  */
 #define PIN_D_TEMP_N_HUM 2
-#define PIN_D_DUST 3
-#define PIN_A_VOLUME 0
-#define PIN_A_LIGHT 5
 
+/*
+ * List of constants for analog pins
+ */
+#define PIN_A_GAS 0
+#define PIN_A_VOLUME A2
+
+/*
+ * List of constants for code
+ */
 #define TEAM_NAME "Heisenberg"
-
-#define DHTPIN 7
 #define DHTTYPE DHT22
 
 /*
@@ -50,7 +56,6 @@ float humidityValue;
 float temperatureValue;
 float dustValue;
 long soundMeter;
-BH1750 lightMeter;
 DHT dht(PIN_D_TEMP_N_HUM, DHTTYPE);
 
 /*
@@ -61,7 +66,6 @@ void setup()
   // Define USB
   Serial.begin(9600);
 
-  lightMeter.begin();
   dht.begin();
 
   Serial.print("Starting Codename Happiness for ");
@@ -106,11 +110,7 @@ void loop()
         soundMeter += analogRead(PIN_A_VOLUME);
     }
 
-    soundMeter >>= 5;
-
-    // Sample light -----------------------------------------
-
-    uint16_t lightMeterReading = lightMeter.readLightLevel();
+    soundMeter = 20 * log10(analogRead(PIN_A_VOLUME));
 
     // Sample temperature and humidity ----------------------
 
@@ -130,8 +130,5 @@ void loop()
     Serial.println("");
     Serial.print("Volume: ");
     Serial.print(soundMeter);
-    Serial.println("");
-    Serial.print("Light: ");
-    Serial.print(lightMeterReading);
     Serial.println("");
 }
