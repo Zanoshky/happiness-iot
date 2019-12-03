@@ -6,9 +6,11 @@
  * <ul>
  * <li>Humidity - DHT22</li>
  * <li>Temperature - DHT22</li>
- * <li>Dust</li>
+ * <li>Dust - TODO</li>
  * <li>Volume - SoundSensor LM386</li>
  * <li>Light - BH1750</li>
+ * <li>Gas - MQ2</li>
+ * <li>Pressure - TODO</li>
  * </ul> 
  * 
  * And sends an HTTP request every seconds with current values.
@@ -27,20 +29,24 @@
  * List of libraries
  */
 #include <Wire.h>
-#include <BH1750.h>
 #include <DHT.h>
+#include <math.h>
 
 /*
- * List of constants
+ * List of constants for digital pins
  */
 #define PIN_D_TEMP_N_HUM 2
-#define PIN_D_DUST 3
-#define PIN_A_VOLUME 0
-#define PIN_A_LIGHT 5
 
+/*
+ * List of constants for analog pins
+ */
+#define PIN_A_GAS 0
+#define PIN_A_VOLUME A2
+
+/*
+ * List of constants for code
+ */
 #define TEAM_NAME "Heisenberg"
-
-#define DHTPIN 7
 #define DHTTYPE DHT22
 
 /*
@@ -50,8 +56,16 @@ float humidityValue;
 float temperatureValue;
 float dustValue;
 long soundMeter;
-BH1750 lightMeter;
 DHT dht(PIN_D_TEMP_N_HUM, DHTTYPE);
+
+//Dust
+int pinDust = 8;
+unsigned long duration;
+unsigned long starttime;
+unsigned long sampletime_ms = 1000; 
+unsigned long lowpulseoccupancy = 0;
+float ratio = 0;
+float concentration = 0;
 
 /*
  * Initial code block that executes on startup / booting
@@ -61,12 +75,14 @@ void setup()
   // Define USB
   Serial.begin(9600);
 
-  lightMeter.begin();
   dht.begin();
 
   Serial.print("Starting Codename Happiness for ");
   Serial.print(TEAM_NAME);
   Serial.print("...");
+
+  pinMode(pinDust,INPUT);
+  starttime = millis(); 
 }
 
 /**
@@ -107,10 +123,7 @@ void loop()
     }
 
     soundMeter >>= 5;
-
-    // Sample light -----------------------------------------
-
-    uint16_t lightMeterReading = lightMeter.readLightLevel();
+    soundMeter = 20 * log10(analogRead(soundMeter));
 
     // Sample temperature and humidity ----------------------
 
@@ -131,7 +144,20 @@ void loop()
     Serial.print("Volume: ");
     Serial.print(soundMeter);
     Serial.println("");
-    Serial.print("Light: ");
-    Serial.print(lightMeterReading);
-    Serial.println("");
+
+    Serial.print("duuuuuuuuuuuust");
+    duration = pulseIn(pinDust, LOW);
+    lowpulseoccupancy = lowpulseoccupancy+duration;
+    if ((millis()-starttime) >= sampletime_ms) //if the sampel time = = 30s 
+    {
+      ratio = lowpulseoccupancy/(sampletime_ms*10.0);  
+      concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; 
+      Serial.print("Concentration = ");
+      Serial.print(concentration);
+      Serial.println(" pcs/0.01cf");
+      Serial.println("\n");
+      lowpulseoccupancy = 0;
+      starttime = millis();
+  }
+    
 }
