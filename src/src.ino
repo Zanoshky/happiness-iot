@@ -1,3 +1,5 @@
+
+
 /*
  * Codename Happiness
  * Language: Arduino
@@ -28,14 +30,21 @@
 /*
  * List of libraries
  */
+#include <SoftwareSerial.h>
 #include <Wire.h>
 #include <DHT.h>
 #include <math.h>
+#include <BH1750.h>
+#include <Adafruit_BME280.h>
 
 /*
  * List of constants for digital pins
  */
 #define PIN_D_TEMP_N_HUM 2
+#define BME_SCK 13
+#define BME_MISO 12
+#define BME_MOSI 11 
+#define BME_CS 10
 
 /*
  * List of constants for analog pins
@@ -56,9 +65,9 @@ float humidityValue;
 float temperatureValue;
 float dustValue;
 long soundMeter;
-DHT dht(PIN_D_TEMP_N_HUM, DHTTYPE);
-
-//Dust
+float digitalTemp;
+float digitalHumidity;
+float digitalPressure;
 int pinDust = 8;
 unsigned long duration;
 unsigned long starttime;
@@ -66,6 +75,21 @@ unsigned long sampletime_ms = 1000;
 unsigned long lowpulseoccupancy = 0;
 float ratio = 0;
 float concentration = 0;
+int smokeAnalogSensor = A0;
+int sensorThres = 400;
+
+//temperature & humidity
+DHT dht(PIN_D_TEMP_N_HUM, DHTTYPE);
+
+//light
+BH1750 lightMeter;
+
+//Wifi
+//SoftwareSerial esp8266(0, 1);
+
+//digital temperature & humidity
+Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO,  BME_SCK);
+
 
 /*
  * Initial code block that executes on startup / booting
@@ -74,15 +98,22 @@ void setup()
 {
   // Define USB
   Serial.begin(9600);
+  //esp8266.begin(115200); 
 
   dht.begin();
-
+  lightMeter.begin();
   Serial.print("Starting Codename Happiness for ");
   Serial.print(TEAM_NAME);
   Serial.print("...");
 
   pinMode(pinDust,INPUT);
   starttime = millis(); 
+
+  pinMode(smokeAnalogSensor, INPUT);
+
+  if (!bme.begin()) {  
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+  }
 }
 
 /**
@@ -114,45 +145,63 @@ void loop()
 {  
     delay(1000);
 
-    // Sample sound / volume --------------------------------
+    //light BH1750-------------------------------------------
+    uint16_t lux = lightMeter.readLightLevel();
+    Serial.print("Light: ");
+    Serial.print(lux);
+    Serial.println(" lx");
 
+    // Sample sound -----------------------------------------
     soundMeter = 0;
     for(byte i=0; i<32; i++)
     {
         soundMeter += analogRead(PIN_A_VOLUME);
     }
-
     soundMeter >>= 5;
     soundMeter = 20 * log10(analogRead(soundMeter));
+    Serial.print("Sound: ");
+    Serial.print(soundMeter);
+    Serial.println("");
 
-    // Sample temperature and humidity ----------------------
-
+    //DHT-----------------------------------------------------
     humidityValue = dht.readHumidity();
     temperatureValue = dht.readTemperature();
-
-    // Debug print ------------------------------------------
- 
     Serial.print("Humidity: ");
     Serial.print(humidityValue);
     Serial.println("");
     Serial.print("Temperature: ");
     Serial.print(temperatureValue);
     Serial.println("");
-    Serial.print("Dust: ");
-    Serial.print(dustValue);
+   
+
+    //digitalBME280-------------------------------------------
+    Serial.print("Digital Values:");
+    digitalTemp = bme.readTemperature();
+    digitalPressure = bme.readPressure();
+    digitalHumidity = bme.readHumidity();
+    Serial.print("Digital Temp: ");
+    Serial.print(digitalTemp);
     Serial.println("");
-    Serial.print("Volume: ");
-    Serial.print(soundMeter);
+    Serial.print("Digital Humidity: ");
+    Serial.print(digitalHumidity);
+    Serial.println("");
+    Serial.print("Digital Pressure ");
+    Serial.print(digitalPressure);
     Serial.println("");
 
-    Serial.print("duuuuuuuuuuuust");
+    //Smoke detection MQ2-----------------------------------
+    int analogSensor = analogRead(smokeAnalogSensor);
+    Serial.print("MQ2: ");
+    Serial.println(analogSensor);
+
+    //Dust detection-----------------------------------------
     duration = pulseIn(pinDust, LOW);
     lowpulseoccupancy = lowpulseoccupancy+duration;
     if ((millis()-starttime) >= sampletime_ms) //if the sampel time = = 30s 
     {
       ratio = lowpulseoccupancy/(sampletime_ms*10.0);  
       concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; 
-      Serial.print("Concentration = ");
+      Serial.print("DustConcentration = ");
       Serial.print(concentration);
       Serial.println(" pcs/0.01cf");
       Serial.println("\n");
