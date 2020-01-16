@@ -121,7 +121,6 @@ void loop()
     {
         soundMeter += analogRead(PIN_A_VOLUME);
     }
-
     soundMeter >>= 5;
     soundMeter = 20 * log10(analogRead(soundMeter));
 
@@ -144,20 +143,4 @@ void loop()
     Serial.print("Volume: ");
     Serial.print(soundMeter);
     Serial.println("");
-
-    Serial.print("duuuuuuuuuuuust");
-    duration = pulseIn(pinDust, LOW);
-    lowpulseoccupancy = lowpulseoccupancy+duration;
-    if ((millis()-starttime) >= sampletime_ms) //if the sampel time = = 30s 
-    {
-      ratio = lowpulseoccupancy/(sampletime_ms*10.0);  
-      concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62; 
-      Serial.print("Concentration = ");
-      Serial.print(concentration);
-      Serial.println(" pcs/0.01cf");
-      Serial.println("\n");
-      lowpulseoccupancy = 0;
-      starttime = millis();
-  }
-    
 }
