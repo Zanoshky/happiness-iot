@@ -67,7 +67,7 @@ const byte txPin = 5; // Wire this to Rx Pin of ESP8266
 
 String AP = "<SSID>";       // AP NAME
 String PASS = "<PASSWORD>";     // AP PASSWORD
-String API = "RHOOBC0BQOFJ7GE0";   // Write API KEY
+String API = "<API KEY>";   // Write API KEY
 String HOST = "api.thingspeak.com";
 String PORT = "80";
 int countTrueCommand;
