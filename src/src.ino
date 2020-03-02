@@ -1,33 +1,17 @@
 
-
 /*
  * Codename Happiness
  * Language: Arduino
- * 
- * This program reads various sensors
- * <ul>
- * <li>Humidity - DHT22</li>
- * <li>Temperature - DHT22</li>
- * <li>Dust - TODO</li>
- * <li>Volume - SoundSensor LM386</li>
- * <li>Light - BH1750</li>
- * <li>Gas - MQ2</li>
- * <li>Pressure - TODO</li>
- * </ul> 
- * 
- * And sends an HTTP request every seconds with current values.
- * 
- * The circuit:
- * TODO
- * 
- * Created: 2019-11-12
- * by Marko Zanoski <zanoski.marko@gmail.com>
- * assisted by 
- * 
- * This example code is in the public domain on Github.
- */
+*
 
-/*
+ *
+ *For the moment the project is integrated with ThinkSpeak - a IoT Platform that collects the data 
+ from the sensors and displays in different charts.
+
+*
+
+
+ /*
  * List of libraries
  */
 #include <SoftwareSerial.h>
@@ -93,10 +77,11 @@ int valSensor = 1;
 
 
 //ESP8266
+//The communication between the Arduino Uno and ESP8266 is a serial connection
 SoftwareSerial ESP8266 (rxPin, txPin);
+
+
 //temperature & humidity
-
-
 DHT dht(PIN_D_TEMP_N_HUM, DHTTYPE);
 
 //light
@@ -109,7 +94,6 @@ Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO,  BME_SCK);
 
 void setup()
 {
-  // Define USB
   Serial.begin(9600);
   ESP8266.begin(9600); 
 
@@ -128,8 +112,11 @@ void setup()
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
   }
 
-  sendCommand("AT",5,"OK");
+  //Check connectivity between Arduino and ESP
+  sendCommand("AT",5,"OK"); 
+  //Change mode to Station mode (client)
   sendCommand("AT+CWMODE=1",5,"OK");
+  //Connect to Access Point with the provided SSID and Password
   sendCommand("AT+CWJAP=\""+ AP +"\",\""+ PASS +"\"",20,"OK");
 
 }
@@ -151,6 +138,8 @@ void sendCommand(String command, int maxTime, char readReplay[]) {
     countTimeCommand++;
   }
   
+
+  //Check if the command was sent to ESP
   if(found == true)
   {
     Serial.println("Works");
@@ -179,8 +168,6 @@ String readTemperatureDH11(){
     return String(temperatureValue);
 }
 
-
-
 String readDigitalTemperature() {
   digitalTemp = bme.readTemperature();
   return String(digitalTemp);
@@ -196,14 +183,10 @@ String readDigitalPressure() {
   return String(digitalPressure);
 }
 
-
-
 String gasDetection() {
   int analogSensor = analogRead(smokeAnalogSensor);
   return String(analogSensor);
 }
-
-
 
 String soundLevelDetection() {
   soundMeter = 0;
@@ -216,15 +199,12 @@ String soundLevelDetection() {
     return String(soundMeter);
 }
 
-
 String lightIntensity(){
   uint16_t lux = lightMeter.readLightLevel();
   return String(lux);
 }
 
-
 String dustLevelDetection(){
-        //Dust detection-----------------------------------------
     duration = pulseIn(pinDust, LOW);
     lowpulseoccupancy = lowpulseoccupancy+duration;
     if ((millis()-starttime) >= sampletime_ms) {
@@ -238,11 +218,16 @@ String dustLevelDetection(){
 
 void loop()
 {  
+   // Data to be sent to ThingSpeak
    String getData = "GET /update?api_key="+ API +"&field1="+readTemperatureDH11()+"&field2="+readHumidityDH11()+"&field3="+readDigitalTemperature()+"&field4="+readDigitalHumidity()+"&field5="+readDigitalPressure()+"&field6="+lightIntensity()+"&field7="+soundLevelDetection()+"&field8="+dustLevelDetection();
+   //	Enable multiplex mode
    sendCommand("AT+CIPMUX=1",5,"OK");
+   //Start a connection as client
    sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+   //Set length of the data that will be sent and send it
    sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
    ESP8266.println(getData);delay(1500);countTrueCommand++;
+   //Close connection
    sendCommand("AT+CIPCLOSE=0",5,"OK");
   
 }
