@@ -1,35 +1,4 @@
-
-
-/*
- * Codename Happiness
- * Language: Arduino
- * 
- * This program reads various sensors
- * <ul>
- * <li>Humidity - DHT22</li>
- * <li>Temperature - DHT22</li>
- * <li>Dust - TODO</li>
- * <li>Volume - SoundSensor LM386</li>
- * <li>Light - BH1750</li>
- * <li>Gas - MQ2</li>
- * <li>Pressure - TODO</li>
- * </ul> 
- * 
- * And sends an HTTP request every seconds with current values.
- * 
- * The circuit:
- * TODO
- * 
- * Created: 2019-11-12
- * by Marko Zanoski <zanoski.marko@gmail.com>
- * assisted by 
- * 
- * This example code is in the public domain on Github.
- */
-
-/*
- * List of libraries
- */
+#include <ArduinoJson.h>
 #include <SoftwareSerial.h>
 #include <Wire.h>
 #include <DHT.h>
@@ -81,17 +50,17 @@ int sensorThres = 400;
 const byte rxPin = 4; // Wire this to Tx Pin of ESP8266
 const byte txPin = 5; // Wire this to Rx Pin of ESP8266
 
-String AP = "<SSID>";       // AP NAME
-String PASS = "<PASSWORD>";     // AP PASSWORD
-String API = "RHOOBC0BQOFJ7GE0";   // Write API KEY
-String HOST = "api.thingspeak.com";
-String PORT = "80";
+String AP = "";       // AP NAME
+String PASS = "";     // AP PASSWORD
+String API = "";   // Write API KEY
+String HOST = "https://my-office-happiness.com";
+String PORT = "9443";
 int countTrueCommand;
 int countTimeCommand; 
 boolean found = false; 
 int valSensor = 1;
 
-
+int idHomebase = 1;
 //ESP8266
 SoftwareSerial ESP8266 (rxPin, txPin);
 //temperature & humidity
@@ -118,7 +87,8 @@ void setup()
   Serial.print("Starting Codename Happiness for ");
   Serial.print(TEAM_NAME);
   Serial.print("...");
-
+  Serial.println("");
+  
   pinMode(pinDust,INPUT);
   starttime = millis(); 
 
@@ -168,44 +138,39 @@ void sendCommand(String command, int maxTime, char readReplay[]) {
   found = false;
  }
 
-
-String readHumidityDH11(){
+float readHumidityDH11(){
     humidityValue = dht.readHumidity();
-    return String(humidityValue);
+    return float(humidityValue);
 }
 
-String readTemperatureDH11(){
+float readTemperatureDH11(){
     temperatureValue = dht.readTemperature();
-    return String(temperatureValue);
+    return float(temperatureValue);
 }
 
-
-
-String readDigitalTemperature() {
+float readDigitalTemperature() {
   digitalTemp = bme.readTemperature();
-  return String(digitalTemp);
+  return float(digitalTemp);
 }
 
-String readDigitalHumidity() {
+float readDigitalHumidity() {
   digitalHumidity = bme.readHumidity();
-  return String(digitalHumidity);
+  return float(digitalHumidity);
 }
 
-String readDigitalPressure() {
+float readDigitalPressure() {
     digitalPressure = bme.readPressure();
-  return String(digitalPressure);
+  return float(digitalPressure);
 }
 
 
 
-String gasDetection() {
+float gasDetection() {
   int analogSensor = analogRead(smokeAnalogSensor);
-  return String(analogSensor);
+  return float(analogSensor);
 }
 
-
-
-String soundLevelDetection() {
+float soundLevelDetection() {
   soundMeter = 0;
     for(byte i=0; i<32; i++)
     {
@@ -213,36 +178,100 @@ String soundLevelDetection() {
     }
     soundMeter >>= 5;
     soundMeter = 20 * log10(analogRead(soundMeter));
-    return String(soundMeter);
+    return float(soundMeter);
 }
 
-
-String lightIntensity(){
+float lightIntensity(){
   uint16_t lux = lightMeter.readLightLevel();
-  return String(lux);
+  return float(lux);
 }
 
 
-String dustLevelDetection(){
+float dustLevelDetection(){
         //Dust detection-----------------------------------------
     duration = pulseIn(pinDust, LOW);
     lowpulseoccupancy = lowpulseoccupancy+duration;
     if ((millis()-starttime) >= sampletime_ms) {
       ratio = lowpulseoccupancy/(sampletime_ms*10.0);  
       concentration = 1.1*pow(ratio,3)-3.8*pow(ratio,2)+520*ratio+0.62;
-      return String(concentration);
+      return float(concentration);
       lowpulseoccupancy = 0;
       starttime = millis();
     }
 }
 
+
+
 void loop()
 {  
-   String getData = "GET /update?api_key="+ API +"&field1="+readTemperatureDH11()+"&field2="+readHumidityDH11()+"&field3="+readDigitalTemperature()+"&field4="+readDigitalHumidity()+"&field5="+readDigitalPressure()+"&field6="+lightIntensity()+"&field7="+soundLevelDetection()+"&field8="+dustLevelDetection();
-   sendCommand("AT+CIPMUX=1",5,"OK");
-   sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
-   sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
-   ESP8266.println(getData);delay(1500);countTrueCommand++;
-   sendCommand("AT+CIPCLOSE=0",5,"OK");
+//   String getData = "GET /update?api_key="+ API +"&field1="+readTemperatureDH11()+"&field2="+readHumidityDH11()+"&field3="+readDigitalTemperature()+"&field4="+readDigitalHumidity()+"&field5="+readDigitalPressure()+"&field6="+lightIntensity()+"&field7="+soundLevelDetection()+"&field8="+dustLevelDetection();
+//   sendCommand("AT+CIPMUX=1",5,"OK");
+//   sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+//   sendCommand("AT+CIPSEND=0," +String(getData.length()+4),4,">");
+//   ESP8266.println(getData);delay(1500);countTrueCommand++;
+//   sendCommand("AT+CIPCLOSE=0",5,"OK");
+
+  Serial.println("testststtsts ");
+
+
+  StaticJsonDocument<100> doc;
+  doc["timestamp"] = "2020-01-16T16:14:47.995Z";
+  doc["temperature"] = readTemperatureDH11();
+  doc["humidity"] = readHumidityDH11();
+  doc["dust"] = dustLevelDetection();
+  doc["gas"] = gasDetection();
+  doc["volume"] = soundLevelDetection();
+  doc["light"] = lightIntensity();
+  doc["homebaseId"] = "1";
+
+
+  Serial.println("testststtsts ");
   
+  char buffer[100];
+  serializeJson(doc, buffer);
+
+  delay(1000);
+  Serial.println(buffer);
+  
+  String getData = "POST /measurements?access_token="" \r\nHost:" + HOST + ":" + PORT + "\r\nContent-Type: application/json\r\n ";
+  Serial.println(getData);
+  
+  sendCommand("AT+CIPMUX=1",5,"OK");
+  sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+  sendCommand("AT+CIPSEND=0," + String(getData.length()+4),4,">");
+  ESP8266.println(getData);delay(1500);countTrueCommand++;
+  sendCommand("AT+CIPCLOSE=0",5,"OK");
+
+  
+//  String uri = "/homebases/1/measurements";
+//  String  data = "temperature=" + readTemperatureDH11() + 
+//    "&humidity=" + readHumidityDH11() + 
+//    "&dust=" + dustLevelDetection() +
+//    "&gas=" + readDigitalPressure() +
+//    "&volume=" + soundLevelDetection() +
+//    "&light=" + lightIntensity() +
+//    "&homebaseId=1" +
+//    "&timestamp=2020-01-16T16:37:41.138Z";
+//  String postRequest =
+//    "POST " + uri + " HTTP/1.0\r\n" +
+//    "Host: " + HOST + "\r\n" +
+//    "Accept: *" + "/" + "*\r\n" +
+//    "Content-Length: " + data.length() + "\r\n" +
+//    "Content-Type: application/x-www-form-urlencoded\r\n" +
+//    "\r\n" + data;
+//   sendCommand("AT+CIPMUX=1",5,"OK");
+//   sendCommand("AT+CIPSTART=0,\"TCP\",\""+ HOST +"\","+ PORT,15,"OK");
+//   sendCommand("AT+CIPSEND=" +String(postRequest.length()+4),4,">");
+//   //ESP8266.println(postRequest);delay(1500);countTrueCommand++;
+//   
+
+  if(ESP8266.find(">")) { Serial.println("Sending.."); ESP8266.println(getData);delay(1500);countTrueCommand++;
+  if(ESP8266.find("SEND OK")) {
+    Serial.println("Packet sent");
+  }
+ 
+  }
+  sendCommand("AT+CIPCLOSE=0",5,"OK");
+
+  delay(1000);
 }
